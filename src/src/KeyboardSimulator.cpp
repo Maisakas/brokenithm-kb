@@ -83,6 +83,17 @@ KeyboardSimulator::Impl::Impl(KeyboardSimulator::KeyboardSimulatorLayout layout)
         m_layout = YUANCON_BTN_MAP;
         break;
     }
+          
+    if (dd_todc && dd_btn && dd_key)
+	{
+		int st = dd_btn(0); //DD Initialize
+		if(st == 1){
+			spdlog::info("DD init OK");
+        }
+	}
+	else {
+		spdlog::info("DD init ERROR");
+	}
 
     // Zero out buffer
     for (int i = 0; i < N_BUTTONS; i++)
@@ -126,34 +137,21 @@ void KeyboardSimulator::Impl::send(uint64_t keys)
     end();
 }
 
-void KeyboardSimulator::Impl::start()
-{
-    m_buffered_keys = 0;
-}
-
 void KeyboardSimulator::Impl::key_down(int i)
 {
     spdlog::debug("{} Down", m_layout[i]);
-    m_input_buffer[m_buffered_keys].ki.wVk = m_layout[i];
-    m_input_buffer[m_buffered_keys].ki.dwFlags = 0;
-    m_buffered_keys++;
+
+    int ddcode = dd_todc(m_layout[i]);
+    dd_key(ddcode,1);
+
+
 }
 
 void KeyboardSimulator::Impl::key_up(int i)
 {
     spdlog::debug("{} Up", m_layout[i]);
-    m_input_buffer[m_buffered_keys].ki.wVk = m_layout[i];
-    m_input_buffer[m_buffered_keys].ki.dwFlags = KEYEVENTF_KEYUP;
-    m_buffered_keys++;
-}
 
-using SendInputHandleType = UINT(WINAPI *)(UINT, LPINPUT, int);
-static SendInputHandleType SendInputHandle = reinterpret_cast<SendInputHandleType>(GetProcAddress(GetModuleHandleW((L"user32")), "SendInput"));
+    int ddcode = dd_todc(m_layout[i]);
+    dd_key(ddcode,2);
 
-void KeyboardSimulator::Impl::end()
-{
-    if (m_buffered_keys)
-    {
-        SendInputHandle(m_buffered_keys, m_input_buffer, sizeof(INPUT));
-    }
 }
