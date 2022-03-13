@@ -6,6 +6,17 @@
 
 // https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
+HINSTANCE hinst  = LoadLibraryW(L"DD.dll");
+
+typedef int(__stdcall*lpfun_DD_todc)(int);
+typedef int(__stdcall*lpfun_DD_btn)(int btn);
+typedef int(__stdcall*lpfun_DD_key)(int code, int flag);
+
+
+lpfun_DD_todc dd_todc = (lpfun_DD_todc)GetProcAddress(hinst, "DD_todc");//VK code to ddcode
+lpfun_DD_btn dd_btn = (lpfun_DD_btn)GetProcAddress(hinst, "DD_btn");//Mouse move rel.
+lpfun_DD_key dd_key = (lpfun_DD_key)GetProcAddress(hinst, "DD_key");//Keyboard
+
 static constexpr int N_BUTTONS = 32 + 6;
 
 WORD TASOLLER_BTN_MAP[N_BUTTONS] = {};
